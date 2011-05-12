@@ -49,10 +49,13 @@ class Mobile extends HttpServlet {
         <div>{
           val event = calagator\"event" filter ((e)=>(e\"id").text == path)
           val venue = event\"venue"
+          val venueLoc = List("latitude", "longitude") map (venue\_ text) mkString ","
           <h4>{ event\"title" text }</h4>
+          <p>{ event\"description" text }</p>
           <div>{ venue\"title" text }</div>
           <div>{ venue\"street-address" text }</div>
           <div>{ List("locality", "region", "postal-code") map (venue\_ text) }</div>
+          <img src={ "http://maps.google.com/maps/api/staticmap?center="+venueLoc+"&zoom=15&size=120x100&sensor=false&markers="+venueLoc } />
         }</div>
 
     resp setContentType "application/xhtml+xml"
@@ -67,7 +70,7 @@ class Mobile extends HttpServlet {
       </html>,
       "",
       false,
-      new DocType("html", new PublicID("-//W3C//DTD XHTML Basic 1.1//EN", "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd"), List())
+      DocType("html", PublicID("-//W3C//DTD XHTML Basic 1.1//EN", "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd"), List())
     )
   }
 
