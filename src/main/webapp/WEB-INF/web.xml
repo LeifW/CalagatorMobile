@@ -13,6 +13,6 @@
 
 	<servlet-mapping>
 		<servlet-name>calagator</servlet-name>
-		<url-pattern>/update</url-pattern>
+		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 </web-app>
