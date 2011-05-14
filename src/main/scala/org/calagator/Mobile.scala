@@ -40,10 +40,10 @@ class Mobile extends HttpServlet {
         <div>
           <h2>Today</h2>
             <h3>{ today.dayOfWeek.asText }</h3>
-            { listEvents(current(today)) }
+            { listEvents(current.get(today).toSeq.flatten) }
           <h2>Tomorrow</h2>
             <h3>{ tomorrow.dayOfWeek.asText }</h3>
-            { listEvents(current(tomorrow)) }
+            { listEvents(current.get(tomorrow).toSeq.flatten) }
         </div>
       else
         <div>{
