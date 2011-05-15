@@ -26,10 +26,8 @@ class Mobile extends HttpServlet {
     val query = "http://calagator.org/events.xml?date[start]="+today+"&date[end]="+tomorrow+"&commit=Filter"
     val calagator = XML load new URL(query)
 
-    val path = req.getPathInfo.tail
-
-    val content =
-      if (path == "") {  // Root level: index view
+    val content = req.getPathInfo.tail match {
+      case "" => {  // Root level: index view
         val groupedEvents = calagator\"event" groupBy ( (event)=> parse(event\"start-time" text).toLocalDate )
         <body>
           <h2>Today</h2>
@@ -49,7 +47,8 @@ class Mobile extends HttpServlet {
           <h3>{ tomorrow.dayOfWeek.asText }</h3>
           <ul>{ listEvents(groupedEvents.get(tomorrow).toSeq.flatten) }</ul>
         </body>
-      } else {       // If path was passed in, look up an event by that id and display detail.
+        }
+      case path => {       // If path was passed in, look up an event by that id and display detail.
         val event = calagator\"event" filter ((e)=>(e\"id").text == path)
         val venue = event\"venue"
         val venueLoc = List("latitude", "longitude") map (venue\_ text) mkString ","
@@ -63,7 +62,8 @@ class Mobile extends HttpServlet {
           <div>{ List("locality", "region", "postal-code") map (venue\_ text) }</div>
           <img src={ "http://maps.google.com/maps/api/staticmap?center="+venueLoc+"&zoom=15&size=130x110&sensor=false&markers="+venueLoc } />
         </body>
-      }
+        }
+    }
 
     resp setContentType "application/xhtml+xml"
     XML.write(
