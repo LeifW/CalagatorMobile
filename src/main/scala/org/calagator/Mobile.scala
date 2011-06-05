@@ -10,6 +10,8 @@ import xml.dtd.{DocType, PublicID}
 class Mobile extends HttpServlet {
 
   val parse = org.joda.time.format.ISODateTimeFormat.dateTimeNoMillis.parseDateTime _
+  lazy val context = getServletContext
+
   def listEvents(events:NodeSeq) =
     for (event <- events) yield
       <li>
@@ -21,13 +23,24 @@ class Mobile extends HttpServlet {
       </li>
 
   override def doGet(request:HttpServletRequest, response:HttpServletResponse ) {
-    val today = LocalDate.now
+    val now = DateTime.now
+    val today = now.toLocalDate
     val tomorrow = today + 1.day
-    val query = "http://calagator.org/events.xml?date[start]="+today+"&date[end]="+tomorrow+"&commit=Filter"
-    val calagator = XML load new URL(query)
+    val calagator = {
+      val last_fetched = context.getAttribute("last_fetched").asInstanceOf[DateTime]
+      if ( last_fetched == null || last_fetched < now - 3.hours || last_fetched.toLocalDate < today  ) { 
+        val query = "http://calagator.org/events.xml?date[start]="+today+"&date[end]="+tomorrow+"&commit=Filter"
+        val calagator = XML load new URL(query)
+        context.setAttribute("calagator", calagator)
+        context.setAttribute("last_fetched", now)
+        calagator
+      } else {
+        context.getAttribute("calagator").asInstanceOf[NodeSeq]
+      }
+    }
 
-    val content = request.getPathInfo.tail match {
-      case "" =>   // Root level: index view
+    val body = request.getPathInfo.tail match {
+      case "" =>  // Root level: index view
         val groupedEvents = calagator\"event" groupBy ( (event)=> parse(event\"start-time" text).toLocalDate )
         <body>
           <h2>Today</h2>
@@ -47,7 +60,7 @@ class Mobile extends HttpServlet {
           <h3>{ tomorrow.dayOfWeek.asText }</h3>
           <ul>{ listEvents(groupedEvents.get(tomorrow).toSeq.flatten) }</ul>
         </body>
-      case path =>        // If path was passed in, look up an event by that id and display detail.
+      case path =>       // If path was passed in, look up an event by that id and display detail.
         val event = calagator\"event" filter ((e)=>(e\"id").text == path)
         val venue = event\"venue"
         val venueLoc = List("latitude", "longitude") map (venue\_ text) mkString ","
@@ -70,7 +83,7 @@ class Mobile extends HttpServlet {
         <head>
           <title>Calagator mobile</title>
         </head>
-        {content}
+        {body}
       </html>,
       "UTF-8",
       false,
