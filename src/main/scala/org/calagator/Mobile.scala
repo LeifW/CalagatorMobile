@@ -28,6 +28,7 @@ class Mobile extends HttpServlet {
     val tomorrow = today + 1.day
     val calagator = {
       val last_fetched = context.getAttribute("last_fetched").asInstanceOf[DateTime]
+      // If it's never been fetched before OR it's been more three hours OR it happened yesterday (so tommorow's not blank after midnight rolls over)
       if ( last_fetched == null || last_fetched < now - 3.hours || last_fetched.toLocalDate < today  ) { 
         val query = "http://calagator.org/events.xml?date[start]="+today+"&date[end]="+tomorrow+"&commit=Filter"
         val calagator = XML load new URL(query)
